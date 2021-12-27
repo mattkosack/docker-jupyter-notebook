@@ -2,11 +2,7 @@ import subprocess
 import sys
 import time
 
-# TODO: 
-# Error checking if name already exists.
-# Check that they start at all
-# Support creation at different path
-# Refactor creation, definitely have some redundant code
+
 
 def docker_running():
     """
@@ -62,6 +58,8 @@ def start_container(name=None, path=None, new=True):
         process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, check=True)
         return process.stdout
     except:
+        # TODO: Check types of errors
+        # TODO: Check if the given name already exists.
         sys.exit("Could not start the container.")
 
 def get_link():
