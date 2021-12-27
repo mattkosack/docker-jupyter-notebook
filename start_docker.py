@@ -28,47 +28,41 @@ def start_docker():
         process = subprocess.run("open /Applications/Docker.app", shell=True, stdout=subprocess.PIPE, check=True)
         return process.stdout
     except:
-        print('Could not open docker.')
+        sys.exit('Could not open Docker.')
 
-def start_new(path=None):
+def start_container(name=None, path=None, new=True):
     """
     """
-    cmd = 'docker run -p 8888:8888 -v "${PWD}":/home/jovyan/work jupyter/datascience-notebook'
+    cmds = {
+        'new_named_dir': f'docker run --name {name} -p 8888:8888 -v {path}:/home/jovyan/work jupyter/datascience-notebook',
+        'new_dir': f'docker run -p 8888:8888 -v {path}:/home/jovyan/work jupyter/datascience-notebook',
+        'new_named_pwd': f'docker run --name {name} -p 8888:8888 -v "${{PWD}}":/home/jovyan/work jupyter/datascience-notebook',
+        'new_pwd': f'docker run -p 8888:8888 -v "${{PWD}}":/home/jovyan/work jupyter/datascience-notebook',
+        'named': f'docker start {name}'
+    }
+
+    if new:
+        if name is not None and path is not None:
+            # Name and Path given
+            cmd = cmds['new_named_dir']
+        elif name is None and path is not None:
+            # Path is given
+            cmd = cmds['new_dir']
+        elif name is not None and path is None:
+            # Name is given
+            cmd = cmds['new_named_pwd']
+        else:
+            # Nothing is given
+            cmd = cmds['new_pwd']
+    else:
+        # Old named container 
+        cmd = cmds['named']
+
     try:
         process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, check=True)
         return process.stdout
     except:
-        print("Could not start a new container")
-
-def start_named(name):
-    """
-    Start the passed docker container name.
-    """
-    container_id = get_container_id(name)
-    cmd = f'docker start -a {container_id}'
-    try:
-        process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, check=True)
-        return process.stdout
-    except:
-        print("Could not start the named container.")
-
-# TODO: This one 
-def start_new_named(name):
-    """
-    Start a new container with the given name.
-    """
-    cmd = f'docker run --name {name} -p 8888:8888 -v "${{PWD}}":/home/jovyan/work jupyter/datascience-notebook'
-    try:
-        process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, check=True)
-        return process.stdout
-    except:
-        print("Could not start the newly named container.")
-
-
-def get_container_id():
-    """
-    """
-    return ...
+        sys.exit("Could not start the container.")
 
 def get_link():
     """
@@ -95,11 +89,13 @@ def go():
     # Check the arguments
     num_args = len(sys.argv)
     if num_args == 1:
-        print("Starting a new docker container at TODO")
-        output = start_new()
+        # Start a new one
+        print("Starting a new docker container")
+        output = start_container()
 
     elif num_args == 2:
-        output = start_named(sys.argv[1])
+        # Start and old named one
+        output = start_container(sys.argv[1])
 
     elif num_args == 3 and sys.argv[1] == '-n':
         # output = start_new_named(sys.argv[2])
